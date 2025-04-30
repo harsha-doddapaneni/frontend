@@ -20,11 +20,12 @@ pipeline {
     stages {
         stage('Read the version') {
             steps {
-                script{
-                    def packageJson = readJSON file: 'package.json'
-                    appVersion = packageJson.version
-                    echo "App version: ${appVersion}"
-                }
+                sh 'ls -la'
+                    script{
+                        def packageJson = readJSON file: 'package.json'
+                        appVersion = packageJson.version
+                        echo "App version: ${appVersion}"
+                    }
             }
         }
         stage('Docker build') {
