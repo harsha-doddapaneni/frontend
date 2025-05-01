@@ -2,14 +2,13 @@ pipeline {
     agent {
         label 'AGENT-1'
     }
-    options{
+    options {
         timeout(time: 30, unit: 'MINUTES')
         disableConcurrentBuilds()
-        //retry(1)
     }
     environment {
         DEBUG = 'true'
-        appVersion = '' // this will become global, we can use across pipeline
+        appVersion = '' 
         region = 'us-east-1'
         account_id = '361769594412'
         project = 'expense'
@@ -20,7 +19,7 @@ pipeline {
     stages {
         stage('Read the version') {
             steps {
-                script{
+                script {
                     def packageJson = readJSON file: 'package.json'
                     appVersion = packageJson.version
                     echo "App version: ${appVersion}"
@@ -28,24 +27,26 @@ pipeline {
             }
         }
         stage('Docker build') {
-            
             steps {
-                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
-                    sh """
-                    aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.us-east-1.amazonaws.com
+                withAWS(region: "${region}", credentials: 'aws-creds') {
+                    script {
+                        def imageURI = "${account_id}.dkr.ecr.${region}.amazonaws.com/${project}/${environment}/${component}:${appVersion}"
+                        sh """
+                        aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.${region}.amazonaws.com
 
-                    docker build -t ${account_id}.dkr.ecr.us-east-1.amazonaws.com/${project}/${environment}/${component}:${appVersion} .
+                        docker build -t ${imageURI} .
 
-                    docker images
+                        docker images
 
-                    docker push ${account_id}.dkr.ecr.us-east-1.amazonaws.com/${project}/${environment}/${component}:${appVersion}
-                    """
+                        docker push ${imageURI}
+                        """
+                    }
                 }
             }
         }
-        stage('Deploy'){
-            steps{
-                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
+        stage('Deploy') {
+            steps {
+                withAWS(region: "${region}", credentials: 'aws-creds') {
                     sh """
                         aws eks update-kubeconfig --region ${region} --name ${project}-${environment}
                         cd helm
@@ -58,15 +59,15 @@ pipeline {
     }
 
     post {
-        always{
-            echo "This sections runs always"
+        always {
+            echo "This section runs always"
             deleteDir()
         }
-        success{
-            echo "This section run when pipeline success"
+        success {
+            echo "This section runs on success"
         }
-        failure{
-            echo "This section run when pipeline failure"
+        failure {
+            echo "This section runs on failure"
         }
     }
 }
