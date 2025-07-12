@@ -15,7 +15,7 @@ pipeline {
         environment = 'dev'
         component = 'frontend'
     }
-      
+       
     stages {
         stage('Read the version') {
             steps {
