@@ -19,6 +19,6 @@ RUN rm -rf /etc/nginx/nginx.conf && \
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY code /usr/share/nginx/html
 USER nginx
-  
+    
 # Uncomment if expense.conf is required and available in build context
 # COPY expense.conf /etc/nginx/conf.d/expense.conf
